@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { UserDetails } from "../../typings";
+import { UserDetails } from "../../../typings";
 import { useRouter } from "next/navigation";
 
 interface DashboardContentProps {

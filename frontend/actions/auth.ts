@@ -159,25 +159,6 @@ export async function signIn(formData: FormData) {
   }
 }
 
-// export async function signIn_google() {
-//   const { account } = await createAdminClient();
-
-//   const origin = (await headers()).get("origin") || "http://localhost:3000";
-
-//   const redirectUrl = await account.createOAuth2Token(
-//     OAuthProvider.Google,
-//     `${origin}/api/oauth`,
-//     `${origin}/login`
-//   );
-
-//   //   const result = await account.get();
-//   //   let user;
-//   //   if (result) {
-//   //     user = await getUserData(result.$id);
-//   //   }
-
-//   return redirectUrl;
-// }
 export async function signIn_google() {
   const { account } = await createAdminClient();
 
