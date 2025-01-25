@@ -9,20 +9,30 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { UserDetails } from "../../../typings";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/components/context/UserContext";
 
-interface DashboardContentProps {
-  user: UserDetails;
-}
-
-export default function DashboardContent({ user }: DashboardContentProps) {
+export default function DashboardContent() {
   const router = useRouter();
+  const { user, loading, error, setUserNull } = useUser();
 
   const handleSignOut = async () => {
     await signOut();
+    setUserNull();
     router.push("/sign-in");
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!user) {
+    return <div>No user logged in.</div>;
+  }
 
   return (
     <div className="space-y-6">

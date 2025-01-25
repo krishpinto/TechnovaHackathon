@@ -1,51 +1,55 @@
-import { createAdminClient } from "@/lib/server/appwrite"
-
+import { createAdminClient } from "@/lib/server/appwrite";
 
 export interface User {
-  $id: string
-  Dob: string
-  Ph_no: string
-  Post: string
-  Department: string
-  Des_position: string
-  Email: string
-  Username: string
-  Userid: string
-  availability: string[]
+  $id: string;
+  Dob: string;
+  Ph_no: string;
+  Post: string;
+  Department: string;
+  Des_position: string;
+  Email: string;
+  Username: string;
+  Userid: string;
+  availability: string[];
 }
 
-export async function getUsers(): Promise<User[]> {
-    try{
-        const { database } = await createAdminClient();
-        const users = await database.listDocuments(
-            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-
-            )
-        return users.documents
-    }catch(error){
-        console.log(error)
-    }
-    }
-
-export async function updateUserAvailability(userId: string, availability: string[]): Promise<void> {
+export async function getUsers() {
+  try {
     const { database } = await createAdminClient();
-  await database.updateDocument(DATABASE_ID, USERS_COLLECTION_ID, userId, { availability })
+    const users = await database.listDocuments(
+      process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+      process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_USERS_ID!
+    );
+
+    return users.documents.map((doc) => ({
+      $id: doc.$id,
+      Dob: doc.Dob,
+      Ph_no: doc.Ph_no,
+      Post: doc.Post,
+      Department: doc.Department,
+      Des_position: doc.Des_position,
+      Email: doc.Email,
+      Username: doc.Username,
+      Userid: doc.Userid,
+      availability: doc.availability,
+    }));
+  } catch (error) {
+    console.log(error);
+  }
 }
 
-export async function createUser(userData: Omit<User, "$id">): Promise<User> {
+export async function completeOnboarding(userId: string) {
+  try {
     const { database } = await createAdminClient();
-  const response = await database.createDocument(DATABASE_ID, USERS_COLLECTION_ID, "unique()", userData)
-  return response as User
+    await database.updateDocument(
+      process.env.NEXT_PUBLIC_DATABASE_ID!,
+      process.env.NEXT_PUBLIC_COLLECTION_ORDERS!,
+      userId,
+      { onboarding: true }
+    );
+    return { success: true };
+  } catch (error) {
+    console.log("Error updating onboarding status:", error);
+    return { success: false };
+  }
 }
-
-export async function updateUser(userId: string, userData: Partial<User>): Promise<User> {
-    const { database } = await createAdminClient();
-  const response = await database.updateDocument(DATABASE_ID, USERS_COLLECTION_ID, userId, userData)
-  return response as User
-}
-
-export async function deleteUser(userId: string): Promise<void> {
-    const { database } = await createAdminClient();
-  await database.deleteDocument(DATABASE_ID, USERS_COLLECTION_ID, userId)
-}
-
