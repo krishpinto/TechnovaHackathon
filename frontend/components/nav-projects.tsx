@@ -6,7 +6,7 @@ import {
   MoreHorizontal,
   Projector,
   Trash2,
-  type LucideIcon,
+  Check,
 } from "lucide-react";
 
 import {
@@ -29,7 +29,35 @@ import { useProjects } from "./context/ProjectContext";
 
 export function NavProjects() {
   const { isMobile } = useSidebar();
-  const { projects, loading, error, fetchProjects } = useProjects();
+  const {
+    projects,
+    loading,
+    error,
+    fetchProjects,
+    currentIndex,
+    setCurrentIndex,
+    currentProject,
+  } = useProjects();
+
+  // Handle project selection
+  const handleProjectSelect = (index: number) => {
+    setCurrentIndex(index);
+  };
+
+  // Handle project deletion
+  const handleDeleteProject = async (projectId: string) => {
+    if (window.confirm("Are you sure you want to delete this project?")) {
+      try {
+        await fetchProjects(); // Refresh the project list after deletion
+        setCurrentIndex(-1); // Reset the current index if the deleted project was selected
+      } catch (err) {
+        console.error("Failed to delete project:", err);
+      }
+    }
+  };
+
+  if (loading) return <div>Loading projects...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -38,9 +66,18 @@ export function NavProjects() {
         {projects &&
           projects.map((project, index) => (
             <SidebarMenuItem key={project.$id}>
-              <SidebarMenuButton asChild>
-                <Projector />
-                <span>{project.pro_name}</span>
+              <SidebarMenuButton
+                asChild
+                className={
+                  currentIndex === index
+                    ? "bg-accent text-accent-foreground"
+                    : ""
+                }
+              >
+                <div className="flex items-center gap-2">
+                  <Projector />
+                  <span>{project.pro_name}</span>
+                </div>
               </SidebarMenuButton>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -54,16 +91,27 @@ export function NavProjects() {
                   side={isMobile ? "bottom" : "right"}
                   align={isMobile ? "end" : "start"}
                 >
-                  <DropdownMenuItem>
-                    <Folder className="text-muted-foreground" />
-                    <span>View Project</span>
+                  <DropdownMenuItem onClick={() => handleProjectSelect(index)}>
+                    {currentIndex === index ? (
+                      <>
+                        <Check className="text-muted-foreground" />
+                        <span>Selected</span>
+                      </>
+                    ) : (
+                      <>
+                        <Folder className="text-muted-foreground" />
+                        <span>Select Project</span>
+                      </>
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Forward className="text-muted-foreground" />
                     <span>Share Project</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleDeleteProject(project.$id)}
+                  >
                     <Trash2 className="text-muted-foreground" />
                     <span>Delete Project</span>
                   </DropdownMenuItem>
