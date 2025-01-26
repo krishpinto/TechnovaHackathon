@@ -12,7 +12,7 @@ const Navbar = () => {
 
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Dashboard", href: "/dashboard" },
+    { name: "Playground", href: "/playground" },
   ];
 
   return (
