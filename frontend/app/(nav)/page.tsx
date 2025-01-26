@@ -7,28 +7,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-red-950">
       {/* Navigation */}
-      <nav className="fixed w-full z-50 bg-black/50 backdrop-blur-sm border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="h-6 w-6 text-red-500" />
-            <span className="text-xl font-bold text-white">ProjectAI</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" className="text-gray-300 hover:text-white">
-              Features
-            </Button>
-            <Button variant="ghost" className="text-gray-300 hover:text-white">
-              Pricing
-            </Button>
-            <Button variant="ghost" className="text-gray-300 hover:text-white">
-              About
-            </Button>
-            <Button className="bg-red-500 hover:bg-red-600 text-white">
-              Get Started
-            </Button>
-          </div>
-        </div>
-      </nav>
 
       {/* Hero Section */}
       <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
