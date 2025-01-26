@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/components/context/UserContext";
 import { createProject } from "@/actions/projects";
+import { useProjects } from "./context/ProjectContext";
 
 export default function CreateProjectForm() {
   const { user } = useUser();
@@ -17,6 +18,7 @@ export default function CreateProjectForm() {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { fetchProjects } = useProjects();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +34,7 @@ export default function CreateProjectForm() {
       const newProject = {
         pro_name: projectName,
         proj_des: projectDescription,
-        members: [user.userId], // Add the current user as a member
+        members: [user.$id], // Add the current user as a member
         status: status,
         end_date: endDate,
         tasks: [], // Initialize with an empty task array
@@ -41,6 +43,8 @@ export default function CreateProjectForm() {
       // Call the createProject function
       await createProject(newProject);
       alert("Project created successfully!");
+
+      fetchProjects();
 
       // Reset the form
       setProjectName("");

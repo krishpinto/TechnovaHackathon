@@ -1,6 +1,7 @@
 "use client";
 
-import React, {
+import type React from "react";
+import {
   createContext,
   useState,
   useContext,
@@ -36,22 +37,8 @@ type UserContextType = {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-const setUserNull = (
-  setUser: React.Dispatch<React.SetStateAction<UserType | null>>,
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>
-) => {
-  try {
-    setLoading(true);
-    setUser(null);
-    setLoading(false);
-  } catch (error) {
-    console.error("Error setting user to null:", error);
-  }
-};
-
-export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+// Export the provider component
+export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,9 +47,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setLoading(true);
       const userData = await getLoggedInUser();
+      console.log("User Data:", userData);
       if (userData) {
         setUser(userData);
-        console.log("Global state set to:", userData);
       } else {
         setUser(null);
       }
@@ -83,8 +70,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchUser();
   }, [fetchUser]);
 
-  const contextSetUserNull = useCallback(() => {
-    setUserNull(setUser, setLoading);
+  const setUserNull = useCallback(() => {
+    setLoading(true);
+    setUser(null);
+    setLoading(false);
   }, []);
 
   return (
@@ -94,18 +83,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
         loading,
         error,
         refetchUser,
-        setUserNull: contextSetUserNull,
+        setUserNull,
       }}
     >
       {children}
     </UserContext.Provider>
   );
-};
+}
 
-export const useUser = () => {
+// Export the hook
+export function useUser() {
   const context = useContext(UserContext);
   if (context === undefined) {
     throw new Error("useUser must be used within a UserProvider");
   }
   return context;
-};
+}

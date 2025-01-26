@@ -74,6 +74,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({
       const response = await fetch("/api/projects");
       if (!response.ok) throw new Error("Failed to fetch projects");
       const data = await response.json();
+
       setProjects(data);
     } catch (err) {
       console.error("Failed to fetch projects:", err);

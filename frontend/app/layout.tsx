@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import { UserProvider } from "@/components/context/UserContext";
 import { ProjectProvider } from "@/components/context/ProjectContext";
 import { TaskProvider } from "@/components/context/TaskContext";
+import { UsersProvider } from "@/components/context/UsersContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,9 @@ export default function RootLayout({
       >
         <UserProvider>
           <ProjectProvider>
-            <TaskProvider>{children}</TaskProvider>
+            <UsersProvider>
+              <TaskProvider>{children}</TaskProvider>
+            </UsersProvider>
           </ProjectProvider>
         </UserProvider>
       </body>

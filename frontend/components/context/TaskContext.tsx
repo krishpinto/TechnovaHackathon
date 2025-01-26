@@ -24,23 +24,11 @@ type TaskType = {
 };
 
 type TaskContextType = {
-  tasks: TaskType[] | null;
+  tasks: TaskType[] | null; // All tasks fetched globally
+  currentTasks: TaskType[] | null; // Tasks filtered by current project
   loading: boolean;
   error: string | null;
-  fetchTasks: () => void;
-  createTask: (
-    task: Omit<
-      TaskType,
-      | "$id"
-      | "$createdAt"
-      | "$updatedAt"
-      | "$permissions"
-      | "$databaseId"
-      | "$collectionId"
-    >
-  ) => Promise<void>;
-  updateTask: (taskId: string, updates: Partial<TaskType>) => Promise<void>;
-  deleteTask: (taskId: string) => Promise<void>;
+  fetchTasks: () => void; // Fetch all tasks
 };
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -48,25 +36,21 @@ const TaskContext = createContext<TaskContextType | undefined>(undefined);
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [tasks, setTasks] = useState<TaskType[] | null>(null);
+  const [tasks, setTasks] = useState<TaskType[] | null>(null); // All tasks
+  const [currentTasks, setCurrentTasks] = useState<TaskType[] | null>(null); // Tasks for the current project
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const { currentProject } = useProjects();
 
+  // Fetch all tasks
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch("/api/tasks");
       if (!response.ok) throw new Error("Failed to fetch tasks");
       const data = await response.json();
-
-      // Filter tasks for the current project
-      const filteredTasks = data.filter(
-        (task: TaskType) => task.project_id === currentProject?.$id
-      );
-
-      setTasks(filteredTasks);
+      setTasks(data); // Store all tasks globally
     } catch (err) {
       console.error("Failed to fetch tasks:", err);
       setError("Failed to fetch tasks");
@@ -74,108 +58,33 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setLoading(false);
     }
-  }, [currentProject]);
-
-  // Automatically fetch tasks when the current project changes
-  useEffect(() => {
-    if (currentProject) {
-      fetchTasks();
-    }
-  }, [currentProject, fetchTasks]);
-
-  const createTask = useCallback(
-    async (
-      task: Omit<
-        TaskType,
-        | "$id"
-        | "$createdAt"
-        | "$updatedAt"
-        | "$permissions"
-        | "$databaseId"
-        | "$collectionId"
-      >
-    ) => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/tasks", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(task),
-        });
-        if (!response.ok) throw new Error("Failed to create task");
-        const newTask = await response.json();
-        setTasks((prevTasks) => [...(prevTasks || []), newTask]);
-      } catch (err) {
-        console.error("Failed to create task:", err);
-        setError("Failed to create task");
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  const updateTask = useCallback(
-    async (taskId: string, updates: Partial<TaskType>) => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/tasks", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ taskId, updates }),
-        });
-        if (!response.ok) throw new Error("Failed to update task");
-        const updatedTask = await response.json();
-        setTasks(
-          (prevTasks) =>
-            prevTasks?.map((t) => (t.$id === taskId ? updatedTask : t)) || null
-        );
-      } catch (err) {
-        console.error("Failed to update task:", err);
-        setError("Failed to update task");
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  const deleteTask = useCallback(async (taskId: string) => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/tasks", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ taskId }),
-      });
-      if (!response.ok) throw new Error("Failed to delete task");
-      setTasks(
-        (prevTasks) => prevTasks?.filter((t) => t.$id !== taskId) || null
-      );
-    } catch (err) {
-      console.error("Failed to delete task:", err);
-      setError("Failed to delete task");
-    } finally {
-      setLoading(false);
-    }
   }, []);
+
+  // Filter tasks based on the current project ID
+  useEffect(() => {
+    if (tasks && currentProject) {
+      const filteredTasks = tasks.filter(
+        (task) => task.project_id === currentProject.$id
+      );
+      setCurrentTasks(filteredTasks); // Store filtered tasks
+    } else {
+      setCurrentTasks(null); // Reset if no current project
+    }
+  }, [tasks, currentProject]);
+
+  // Automatically fetch all tasks when the component mounts
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   return (
     <TaskContext.Provider
       value={{
         tasks,
+        currentTasks,
         loading,
         error,
         fetchTasks,
-        createTask,
-        updateTask,
-        deleteTask,
       }}
     >
       {children}
