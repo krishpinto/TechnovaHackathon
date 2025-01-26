@@ -44,14 +44,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUser = useCallback(async () => {
+    console.log("Starting to fetch user data...");
     try {
       setLoading(true);
       const userData = await getLoggedInUser();
-      console.log("User Data:", userData);
+      console.log("Received user data:", userData);
+      
       if (userData) {
         setUser(userData);
+        console.log("User data set successfully");
       } else {
         setUser(null);
+        console.log("No user data received");
       }
     } catch (err) {
       console.error("Failed to fetch user data:", err);
@@ -59,6 +63,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
     } finally {
       setLoading(false);
+      console.log("Finished loading user data");
     }
   }, []);
 
@@ -66,15 +71,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     fetchUser();
   }, [fetchUser]);
 
-  const refetchUser = useCallback(() => {
-    fetchUser();
-  }, [fetchUser]);
-
-  const setUserNull = useCallback(() => {
-    setLoading(true);
-    setUser(null);
-    setLoading(false);
-  }, []);
+  // Add a debug log for render
+  console.log("UserContext State:", { user, loading, error });
 
   return (
     <UserContext.Provider
@@ -82,8 +80,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         user,
         loading,
         error,
-        refetchUser,
-        setUserNull,
+        refetchUser: fetchUser,
+        setUserNull: () => {
+          setLoading(true);
+          setUser(null);
+          setLoading(false);
+        },
       }}
     >
       {children}

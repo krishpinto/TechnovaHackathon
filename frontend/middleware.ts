@@ -1,23 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { getLoggedInUser } from "./actions/auth";
-import { shouldBlockUser } from "./actions/users";
 
-const protectedRoutes = ["/dashboard"];
-
-export default async function middleware(request: NextRequest) {
-  const user = await getLoggedInUser();
-
-  const isProtected = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
-
-  if (!user && isProtected) {
-    // if (await shouldBlockUser()) {
-    //   const absoluteUrl = new URL("/getting-started", request.nextUrl.origin);
-    //   return NextResponse.redirect(absoluteUrl.toString());
-    // }
-    const absoluteUrl = new URL("/sign-in", request.nextUrl.origin);
-    return NextResponse.redirect(absoluteUrl.toString());
+export async function middleware(request: NextRequest) {
+  try {
+    // Only apply to dashboard routes
+    if (request.nextUrl.pathname.startsWith("/dashboard")) {
+      const user = await getLoggedInUser();
+      
+      if (!user) {
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+    }
+    
+    return NextResponse.next();
+  } catch (error) {
+    console.error("Middleware error:", error);
+    // Don't redirect on API routes
+    if (request.nextUrl.pathname.startsWith("/api")) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/login", request.url));
   }
-  return NextResponse.next();
 }
+
+export const config = {
+  matcher: ["/dashboard/:path*", "/api/:path*"],
+};

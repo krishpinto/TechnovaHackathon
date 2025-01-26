@@ -32,7 +32,7 @@ type ProjectContextType = {
   setCurrentIndex: (index: number) => void;
   loading: boolean;
   error: string | null;
-  fetchProjects: () => void;
+  fetchProjects: () => Promise<void>;
   createProject: (
     project: Omit<
       ProjectType,
@@ -55,35 +55,51 @@ type ProjectContextType = {
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
-export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<ProjectType[] | null>(null);
-  const [currentProject, setCurrentProject] = useState<ProjectType | null>(
-    null
-  );
-  const [currentIndex, setCurrentIndex] = useState<number>(-1);
-  const [loading, setLoading] = useState(true);
+  const [currentProject, setCurrentProject] = useState<ProjectType | null>(null);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const { user } = useUser();
 
   const fetchProjects = useCallback(async () => {
+    console.log("ProjectContext: Starting to fetch projects");
     try {
-      setLoading(true);
       const response = await fetch("/api/projects");
-      if (!response.ok) throw new Error("Failed to fetch projects");
+      console.log("ProjectContext: API response received", {
+        status: response.status,
+        ok: response.ok
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || "Failed to fetch projects");
+      }
+
       const data = await response.json();
+      console.log("ProjectContext: Projects data received", {
+        count: data.length,
+        firstProject: data[0]
+      });
 
       setProjects(data);
+      if (data && data.length > 0) {
+        setCurrentProject(data[currentIndex]);
+      }
     } catch (err) {
-      console.error("Failed to fetch projects:", err);
-      setError("Failed to fetch projects");
+      console.error("ProjectContext: Error fetching projects:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch projects");
       setProjects(null);
     } finally {
       setLoading(false);
+      console.log("ProjectContext: Fetch completed", {
+        hasProjects: !!projects,
+        hasError: !!error
+      });
     }
-  }, []);
+  }, [currentIndex]);
 
   const createProject = useCallback(
     async (
@@ -183,23 +199,29 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   useEffect(() => {
+    console.log("ProjectContext: Initial mount, calling fetchProjects");
     if (user) {
       fetchProjects();
     }
   }, [user, fetchProjects]);
 
   useEffect(() => {
-    if (
-      projects &&
-      projects.length > 0 &&
-      currentIndex >= 0 &&
-      currentIndex < projects.length
-    ) {
+    if (projects && projects.length > 0) {
+      console.log("ProjectContext: Updating current project", {
+        index: currentIndex,
+        projectName: projects[currentIndex]?.pro_name
+      });
       setCurrentProject(projects[currentIndex]);
-    } else {
-      setCurrentProject(null);
     }
   }, [currentIndex, projects]);
+
+  console.log("ProjectContext: Rendering with state", {
+    hasProjects: !!projects,
+    projectsCount: projects?.length,
+    currentProjectId: currentProject?.$id,
+    isLoading: loading,
+    errorMessage: error
+  });
 
   return (
     <ProjectContext.Provider
@@ -220,12 +242,12 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({
       {children}
     </ProjectContext.Provider>
   );
-};
+}
 
-export const useProjects = () => {
+export function useProjects() {
   const context = useContext(ProjectContext);
   if (context === undefined) {
     throw new Error("useProjects must be used within a ProjectProvider");
   }
   return context;
-};
+}

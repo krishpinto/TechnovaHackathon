@@ -1,10 +1,10 @@
 import Navbar from "@/components/Navbar";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function NavLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className="min-h-screen">
       <Navbar />
-      <main className="">{children}</main>
-    </>
+      {children}
+    </div>
   );
 }

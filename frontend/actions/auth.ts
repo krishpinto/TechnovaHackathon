@@ -11,19 +11,22 @@ import { redirect } from "next/navigation";
 //   return emailRegex.test(email);
 // };
 
-export const getUserDetails = async (userId: string) => {
+export async function getUserDetails(userId: string) {
   try {
     const { database } = await createAdminClient();
+    
     const user = await database.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_USERS_ID!,
-      [Query.equal("userId", [userId])]
+      [Query.equal("userId", userId)]
     );
+
     return user.documents[0] || null;
   } catch (error) {
-    console.log(error);
+    console.error("Error getting user details:", error);
+    throw error;
   }
-};
+}
 
 export async function signUp(formData: FormData) {
   const username = formData.get("username") as string;

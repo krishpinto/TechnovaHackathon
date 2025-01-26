@@ -3,21 +3,32 @@ import { NextResponse, NextRequest } from "next/server";
 
 import { ID } from "node-appwrite";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
+  console.log("API: Starting to fetch projects");
   try {
     const { database } = await createAdminClient();
+    console.log("API: Admin client created");
 
-    // Fetch all projects
     const projects = await database.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROJECTS_ID!
     );
+    
+    console.log("API: Projects fetched", {
+      count: projects.documents.length,
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      collectionId: process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROJECTS_ID
+    });
 
     return NextResponse.json(projects.documents);
   } catch (error) {
-    console.error("Failed to fetch projects:", error);
+    console.error("API: Failed to fetch projects:", error);
+    // Return more detailed error information
     return NextResponse.json(
-      { error: "Failed to fetch projects" },
+      { 
+        error: "Failed to fetch projects",
+        details: error instanceof Error ? error.message : "Unknown error"
+      },
       { status: 500 }
     );
   }

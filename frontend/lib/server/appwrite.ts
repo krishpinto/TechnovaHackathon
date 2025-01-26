@@ -22,20 +22,27 @@ export async function createSessionClient() {
 }
 
 export async function createAdminClient() {
-  const client = new Client()
+  console.log("Creating admin client...");
+  
+  if (!process.env.APPWRITE_API_KEY) {
+    throw new Error("APPWRITE_API_KEY is not defined in environment variables");
+  }
+
+  const client = new Client();
+  
+  client
     .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
-    .setKey(process.env.NEXT_PUBLIC_API_KEY!);
+    .setKey(process.env.APPWRITE_API_KEY);
 
-  return {
-    get account() {
-      return new Account(client);
-    },
-    get database() {
-      return new Databases(client);
-    },
-    get users() {
-      return new Users(client);
-    },
-  };
+  console.log("Admin client configuration:", {
+    hasEndpoint: !!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT,
+    hasProjectId: !!process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID,
+    hasApiKey: !!process.env.APPWRITE_API_KEY,
+    apiKey: process.env.APPWRITE_API_KEY.substring(0, 8) + "..." // Log only first 8 chars for security
+  });
+
+  const database = new Databases(client);
+  
+  return { database };
 }
